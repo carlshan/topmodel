@@ -40,7 +40,10 @@ def compare():
 def training(path):
     model_data = g.model_data_manager.models[path]
     cached_data = model_data.get_metrics(50)
-
+    # Some precisions values will be None at certain high thresholds
+    filtered_precisions = [elem for elem in cached_data[0]['precisions'] if elem
+                           is not None]
+    filtered_recalls = cached_data[0]['recalls'][:len(filtered_precisions)]
     context = {
         'precision_recall_curve': plots.precision_recall_curve(cached_data),
         'roc_curve': plots.roc_curve(cached_data),
@@ -48,8 +51,8 @@ def training(path):
         'marginal_precision_curve': plots.marginal_precision_curve(cached_data[0]),
         'threshold_graph': plots.thresholds_graph(cached_data[0]),
         'threshold_table': plots.thresholds_table(cached_data[0]),
-
         'brier': plots.box_brier(cached_data),
+        'pr_auc': auc(filtered_precisions, filtered_recalls),
         'auc': auc(cached_data[0]['fprs'], cached_data[0]['recalls']),
         'notes': model_data.get_notes(),
         'path': path,
